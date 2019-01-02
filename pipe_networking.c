@@ -10,17 +10,17 @@
   returns the file descriptor for the upstream pipe.
   =========================*/
 int server_handshake(int *to_client) {
-  printf("Creating upstream pipe \n");
+  printf("Created upstream pipe for the first time, or it already exists \n");
   int pipe = mkfifo("WKP",0644);
-
-  if (pipe != 0){
-  perror("Error creating upstream pipe \n");
-  return -1;
-  }
-
-  printf("Created upstream pipe\n");
-
+  printf("Waiting for a client \n");
   int up_pipe = open("WKP",O_RDONLY);
+  if (!up_pipe){
+    perror("Error opening the upstream pipe");
+  }
+  else{
+    printf("Opened upstream pipe\n");
+  }
+  
   char s[HANDSHAKE_BUFFER_SIZE];
 
   read(up_pipe,s,HANDSHAKE_BUFFER_SIZE);
@@ -32,7 +32,7 @@ int server_handshake(int *to_client) {
     *to_client = open(s,O_WRONLY);
     remove("WKP");
     if (*to_client < 0){
-      perror("Error opening downpipe from client to write\n");
+      perror("Error opening downpipe from client to write");
       return -1;
     }
 
@@ -64,7 +64,7 @@ int client_handshake(int *to_server) {
   int comm = open("WKP", O_WRONLY);
 
   if (comm < 0){
-    perror("Error opening up to WKP \n");
+    perror("Error opening up to WKP");
   }
 
   int l = mkfifo("DP",0644);
@@ -83,7 +83,7 @@ int client_handshake(int *to_server) {
   int dcomm = open("DP", O_RDONLY);
   remove("DP");
   if (dcomm < 0){
-    perror("Error opening up to downpipe \n");
+    perror("Error opening up to downpipe");
   }
 
   char s[HANDSHAKE_BUFFER_SIZE];
